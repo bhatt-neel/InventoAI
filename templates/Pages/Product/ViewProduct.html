@@ -1,0 +1,64 @@
+{% extends 'Boiler/Base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="Page-Header row">
+        <div class="main-title">
+            Products
+            <a href="/admin/Product/product/add/" class="btn btn-sm btn-outline-dark float-end">Add Product</a>
+        </div>
+    </div>
+    <table class="table table-bordered border-dark table-hover mt-4">
+        <thead>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Cost Price</th>
+            <th>MRP</th>
+            <th>Selling Price</th>
+            <th>Category</th>
+        </thead>
+        <tbody>
+        {% for product in products %}
+            <tr data-bs-toggle="modal" data-bs-target="#Model-{{forloop.counter}}" style="cursor:pointer">
+
+                <td>{{forloop.counter}}</td>
+                <td>{{product.name}}</td>
+                <td>{{product.costPrice}}</td>
+                <td>{{product.mrp}}</td>
+                <td>{{product.sellingPrice}}</td>
+                <td>{{product.category}}</td>
+
+                <!-- Modal -->
+                <div class="modal fade" id="Model-{{forloop.counter}}" tabindex="-1" aria-labelledby="Model-Label-{{forloop.counter}}" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="Model-Label-{{forloop.counter}}">{{product.name}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body d-flex ml-auto">
+                          <img src="/{{product.img}}" class="product-img">
+                          <div class="product-details mt-3">
+                              <p>Cost Price : {{product.costPrice}} <i class="fas fa-rupee-sign"></i></p>
+                              <p>MRP : {{product.costPrice}} <i class="fas fa-rupee-sign"></i></p>
+                              <p>Selling Price : {{product.costPrice}} <i class="fas fa-rupee-sign"></i></p>
+                              <p>tax : {{product.tax}} %</p>
+                              <p>Category : {{product.category.name}}</p>
+                          </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+                        <a href="/admin/Product/product/{{product.uuid}}/change/" class="btn btn-dark">Edit</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,341 @@
+{% extends 'Boiler/Base.html' %}
+{% load custom_filter %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5" xmlns:input="http://www.w3.org/1999/html">
+
+    <div class="row">
+
+        <div class="col-lg-8 mt-4">
+
+            <div class="row">
+
+                <div class="col-lg-12 card">
+
+                    <div class="main-title pt-3">
+                Create Invoice
+            </div>
+
+                    <form method="post" class="">
+                        {% csrf_token %}
+
+                        <div class="row mt-4">
+
+                            {% for i in messages %}
+                            <div class="col-lg-12">
+                                <div class="alert alert-danger" role="alert">
+                                    {{i}}
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-lg-9">
+
+                                  <div class="form-group">
+                                      <input type="text" id="myInput" class="form-control" placeholder="Product Name" name="product_name" autocomplete="off" onkeydown="focusNext(event)">
+                                  </div>
+
+                            </div>
+
+                            <div class="col-lg-3">
+
+                              <div class="form-group">
+                                  <input type="number" id="qty" class="form-control" placeholder="QTY" value="1" name="qty" onkeydown="focusNext(event)">
+                              </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="row my-3">
+
+                            <div class="col-lg-12">
+
+                                <input type="hidden" name="request_type" value="add_product">
+
+                              <button class="btn btn-dark" type="submit" id="submit">
+                                  <span class="btn-inner--text" onkeydown="focusNext(event)">add Product</span>
+                              </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+            <div class="row mt-4">
+
+                <div class="col-lg-12">
+
+                    <table class="table mt-4">
+            <thead>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price To Sell</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th>-</th>
+            </thead>
+            <tbody>
+
+                    {% for i in request.session.invoice %}
+                        {% with i|get_product_by_uuid as product %}
+                            <tr>
+
+                                <td>{{forloop.counter}}</td>
+                                <td>{{product.name}}</td>
+                                <td>{{product.sellingPrice}}</td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-auto">
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-dark" name="decrease_product_qty" value="{{product.uuid}}">-</button>
+                                            </form>
+                                        </div>
+                                        <div class="col-auto">
+                                            {{request.session.invoice|get_value_from_key:i}}
+                                        </div>
+                                        <div class="col-auto">
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-dark" name="increase_product_qty" value="{{product.uuid}}">+</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{request.session.invoice|get_value_from_key:i|multiply:product.sellingPrice}}</td>
+                                <td><a href="#" data-bs-toggle="modal" data-bs-target="#Model-{{forloop.counter}}" style="cursor:pointer">View</a></td>
+
+                                <!-- Modal -->
+                                <div class="modal fade" id="Model-{{forloop.counter}}" tabindex="-1" aria-labelledby="Model-Label-{{forloop.counter}}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <h5 class="modal-title" id="Model-Label-{{forloop.counter}}">{{product.name}}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                      </div>
+                                      <div class="modal-body d-flex ml-auto">
+                                          <img src="/{{product.img}}" class="product-img">
+                                          <div class="product-details mt-3">
+                                              <p>Cost Price : {{product.costPrice}} <i class="fas fa-rupee-sign"></i></p>
+                                              <p>MRP : {{product.mrp}} <i class="fas fa-rupee-sign"></i></p>
+                                              <p>Selling Price : {{product.sellingPrice}} <i class="fas fa-rupee-sign"></i></p>
+                                              <p>tax : {{product.tax}} %</p>
+                                              <p>Category : {{product.category.name}}</p>
+                                          </div>
+                                      </div>
+                                      <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+                                        <a href="/admin/Product/product/{{product.uuid}}/change/" class="btn btn-dark">Edit</a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+
+            </tbody>
+        </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-1"></div>
+
+        <div class="col-lg-3 card mt-4">
+
+            <select class="form-control my-3">
+                <option>Select Customer</option>
+                {% for customer in customers %}
+                <option value="{{customer.uuid}}">{{customer.fname}} {{customer.lname}}</option>
+                {% endfor %}
+            </select>
+
+            <hr>
+
+            <a href="#" class="text-center">Or Create</a>
+
+            <hr>
+
+            <input type="text" class="form-control mt-3" placeholder="First name" disabled>
+            <input type="text" class="form-control mt-3" placeholder="Last name" disabled>
+            <input type="number" class="form-control mt-3" placeholder="Phone" disabled>
+            <input type="email" class="form-control mt-3" placeholder="Email" disabled>
+            <textarea class="form-control my-3" placeholder="Address" disabled></textarea>
+            <input type="submit" class="btn btn-dark mb-4" value="Generate Invoice">
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+</div>
+
+<script>
+  function autocomplete(inp, arr) {
+      /*the autocomplete function takes two arguments,
+      the text field element and an array of possible autocompleted values:*/
+      var currentFocus;
+      /*execute a function when someone writes in the text field:*/
+      inp.addEventListener("input", function(e) {
+          var a, b, i, val = this.value;
+          /*close any already open lists of autocompleted values*/
+          closeAllLists();
+          if (!val) { return false;}
+          currentFocus = -1;
+          /*create a DIV element that will contain the items (values):*/
+          a = document.createElement("DIV");
+          a.setAttribute("id", this.id + "autocomplete-list");
+          a.setAttribute("class", "autocomplete-items");
+          /*append the DIV element as a child of the autocomplete container:*/
+          this.parentNode.appendChild(a);
+          /*for each item in the array...*/
+          for (i = 0; i < arr.length; i++) {
+            /*check if the item starts with the same letters as the text field value:*/
+            if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+              /*create a DIV element for each matching element:*/
+              b = document.createElement("DIV");
+              /*make the matching letters bold:*/
+              b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+              b.innerHTML += arr[i].substr(val.length);
+              /*insert a input field that will hold the current array item's value:*/
+              b.innerHTML += "<input type='hidden' value='" + arr[i] + "' id='avail'>";
+              /*execute a function when someone clicks on the item value (DIV element):*/
+              b.addEventListener("click", function(e) {
+                  /*insert the value for the autocomplete text field:*/
+                  txtbox = document.getElementById('myInput')
+                  txtbox.value = this.getElementsByTagName("input")[0].value;
+                  /*close the list of autocompleted values,
+                  (or any other open lists of autocompleted values:*/
+                  closeAllLists();
+              });
+              a.appendChild(b);
+            }
+          }
+      });
+      /*execute a function presses a key on the keyboard:*/
+      inp.addEventListener("keydown", function(e) {
+          var x = document.getElementById(this.id + "autocomplete-list");
+          if (x) x = x.getElementsByTagName("div");
+          if (e.keyCode == 40) {
+            /*If the arrow DOWN key is pressed,
+            increase the currentFocus variable:*/
+            currentFocus++;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 38) { //up
+            /*If the arrow UP key is pressed,
+            decrease the currentFocus variable:*/
+            currentFocus--;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 13) {
+            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+            e.preventDefault();
+            if (currentFocus > -1) {
+              /*and simulate a click on the "
+              \\
+              active" item:*/
+              if (x) x[currentFocus].click();
+            }
+          }
+      });
+      function addActive(x) {
+        /*a function to classify an item as "active":*/
+        if (!x) return false;
+        /*start by removing the "active" class on all items:*/
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        /*add class "autocomplete-active":*/
+        x[currentFocus].classList.add("autocomplete-active");
+      }
+      function removeActive(x) {
+        /*a function to remove the "active" class from all autocomplete items:*/
+        for (var i = 0; i < x.length; i++) {
+          x[i].classList.remove("autocomplete-active");
+        }
+      }
+      function closeAllLists(elmnt) {
+        /*close all autocomplete lists in the document,
+        except the one passed as an argument:*/
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+          if (elmnt != x[i] && elmnt != inp) {
+            x[i].parentNode.removeChild(x[i]);
+          }
+        }
+      }
+      /*execute a function when someone clicks in the document:*/
+      document.addEventListener("click", function (e) {
+          closeAllLists(e.target);
+      });
+    }
+
+    /*An array containing all the country names in the world:*/
+    var countries = [
+
+        {% for product in products %}
+            '{{product.name}}',
+        {% endfor %}
+    ];
+
+    /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+    autocomplete(document.getElementById("myInput"), countries);
+
+</script>
+
+<script>
+    var pname = document.getElementById('myInput').value;
+    document.getElementById('myInput').focus();
+    var idArray = ['fname', 'lname', 'address', 'myInput', 'submit'];
+    var idArray_UpDown = ['fname', 'lname', 'address', 'myInput', 'qty'];
+    function focusNext(e){
+        try{
+            product_name = document.getElementById('myInput').value;
+            available=document.getElementById('avail');
+            for(var i = 0; i < idArray.length; i++){
+
+                if(e.keyCode === 13 && e.target.id === idArray[i]){
+
+                if(e.target.id === idArray[3]){
+                    if(available){
+                        console.log('Avail Is Available')
+                        pass;
+                    }else{
+                    console.log('Avail Is Not Available')
+                    document.getElementById('submit').click();
+                    }
+                }else{
+                    event.preventDefault();
+                    document.querySelector(`#${idArray[i+1]}`).focus();
+                    document.querySelector(`#${idArray[i+1]}`).select();
+                }
+            }
+
+            }
+        }catch(error){}
+    }
+</script>
+
+{% endblock %}

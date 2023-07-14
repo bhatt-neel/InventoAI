@@ -1,0 +1,58 @@
+{% extends 'Boiler/Base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="Page-Header row">
+        <div class="main-title">
+            Customers
+            <a href="/admin/Customer/customer/add/" class="btn btn-sm btn-outline-dark float-end">Add Customer</a>
+        </div>
+    </div>
+    <table class="table table-bordered border-dark table-hover mt-4">
+        <thead>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+        </thead>
+        <tbody>
+        {% for customer in customers %}
+            <tr data-bs-toggle="modal" data-bs-target="#Model-{{forloop.counter}}" style="cursor:pointer">
+
+                <td>{{forloop.counter}}</td>
+                <td>{{customer.fname}} {{customer.lname}}</td>
+                <td>{{customer.phone}}</td>
+                <td>{{customer.email}}</td>
+
+                <!-- Modal -->
+                <div class="modal fade" id="Model-{{forloop.counter}}" tabindex="-1" aria-labelledby="Model-Label-{{forloop.counter}}" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="Model-Label-{{forloop.counter}}">{{customer.fname}} {{customer.lname}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body d-flex ml-auto">
+                          <div class="product-details mt-3">
+                              <p>Name : {{customer.fname}} {{customer.lname}}</p>
+                              <p>Phone : {{customer.phone}}</p>
+                              <p>Email : {{customer.email}}</p>
+                              <p>Address : {{customer.address}}</p>
+                          </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+                        <a href="/admin/Customer/customer/{{customer.uuid}}/change/" class="btn btn-dark">Edit</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
