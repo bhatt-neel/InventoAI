@@ -1,4 +1,5 @@
 from .validation import *
+from Customer.models import *
 
 class InvoiceSession:
 
@@ -46,7 +47,7 @@ class InvoiceSession:
         else:
             uuidLst = []
 
-        products = Product.objects.filter(uuid__in = uuidLst)
+        products = Product.objects.filter(uuid__in=uuidLst)
 
         return products
 
@@ -86,33 +87,32 @@ class InvoiceSession:
             return productResponse
 
     @staticmethod
-    def decrease_qty(request, product_uuid, qty_to_add):
-        existing_qty_in_session = InvoiceSession.get_product_qty_by_uuid(request, product_uuid)
-        requested_qty_to_add = abs(qty_to_add)
-        total_requested_qty = requested_qty_to_add + existing_qty_in_session
+    def decrease_qty(request, product_uuid, qty_to_decrease):
+        requested_qty_to_add = abs(qty_to_decrease)
 
         product = GetProduct.by_uuid(product_uuid)
 
         if product['status']:
-            product_object = product['object']
 
-            availability_status = is_requested_qty_of_product_available(product_object, total_requested_qty)
+            invoice = request.session.get('invoice')
 
-            if availability_status['status']:
-                invoice = request.session.get('invoice')
+            if invoice:
 
-                if invoice:
-                    existing_qty = invoice.get(product_uuid)
-                    if existing_qty:
-                        if existing_qty == 1:
-                            invoice.pop(product_uuid)
-                        else:
-                            invoice[product_uuid] -= requested_qty_to_add
+                existing_qty = invoice.get(product_uuid)
 
-                request.session['invoice'] = invoice
+                if existing_qty:
+
+                    if existing_qty == 1:
+                        invoice.pop(product_uuid)
+                    else:
+                        invoice[product_uuid] -= requested_qty_to_add
+
+                    request.session['invoice'] = invoice
+
+                    return {'status': True}
 
             else:
-                return availability_status
+                return {'status': False, 'error_code': 'YTD', 'error_msg': 'Product Not Found in Cart !'}
 
     @staticmethod
     def delete_product(request, product_uuid):
@@ -154,41 +154,53 @@ def InvoicePostRequestHandler(request):
         else:
             return requested_product_response
 
-
     elif request_type == 'increase_product_qty':
-        requested_product_response = GetProduct.by_name(request_data['product_name'])
-        requested_qty = int(request_data['qty'])
+        requested_product_response = GetProduct.by_uuid(request_data['requested_product'])
         if requested_product_response['status']:
             requested_product_uuid = str(requested_product_response['object'].uuid)
-            response = InvoiceSession.add_qty(request, requested_product_uuid, requested_qty)
+            response = InvoiceSession.add_qty(request, requested_product_uuid, 1)
             return response
         else:
             return requested_product_response
 
     elif request_type == 'decrease_product_qty':
-        print('decrease_product_qty')
+        requested_product_response = GetProduct.by_uuid(request_data['requested_product'])
+        if requested_product_response['status']:
+            requested_product_uuid = str(requested_product_response['object'].uuid)
+            response = InvoiceSession.decrease_qty(request, requested_product_uuid, 1)
+            return response
+        else:
+            return requested_product_response
 
     elif request_type == 'delete_product':
-        print('delete_product')
+        requested_product_response = GetProduct.by_uuid(request_data['requested_product'])
+        if requested_product_response['status']:
+            requested_product_uuid = str(requested_product_response['object'].uuid)
+            response = InvoiceSession.delete_product(request, requested_product_uuid)
+            return response
+        else:
+            return requested_product_response
 
+    elif request_type == 'create_customer':
+        fname = request_data['fname']
+        lname = request_data['lname']
+        phone = request_data['phone']
+        email = request_data['email']
+        address = request_data['address']
 
+        customer_validation_response = validate_customer(fname, lname, phone, email, address)
 
-    # product_name = request_data['product_name']
-    # initial_requested_qty = int(request_data['qty'])
+        if customer_validation_response['status']:
+            customer_model = Customer(fname=fname, lname=lname, phone=phone, email=email, address=address)
+            customer_model.save()
+            return {'status': True}
+        else:
+            return customer_validation_response
 
-#     post_data = request.POST
-#     request_type = post_data.get('request_type')
-#
-#         requested_product_validation = GetProduct.by_name(product_name)
-#
-#         if requested_product_validation['status']:
-#             requested_product_object = requested_product_validation['object']
-#             product_uuid = str(requested_product_object.uuid)
-#             InvoiceSession.add_qty(request, product_uuid, initial_requested_qty)
-#             print(InvoiceSession.get_product_qty_by_uuid(request, product_uuid))
+    elif request_type == 'select_customer':
+        selected_customer_uuid = request_data['selected_customer']
+        customer = Customer.objects.filter(uuid=selected_customer_uuid)
+        return {'status': True}
 
-
-
-
-
-
+    else:
+        return {'status': False, 'error_code': 'RNF', 'error_msg': 'Invalid request'}

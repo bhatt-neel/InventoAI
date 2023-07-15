@@ -1,3 +1,4 @@
+import re
 from Product.models import Product
 
 
@@ -31,7 +32,6 @@ class GetProduct:
         return {'status': False, 'error_code': 'P-NF-104', 'error_msg': f'There is no product which have id = {pk}'}
 
 
-
 def is_requested_qty_of_product_available(requested_product_object, requested_qty):
     product_existence_status = GetProduct.by_product(requested_product_object)
     if product_existence_status['status']:
@@ -46,3 +46,29 @@ def is_requested_qty_of_product_available(requested_product_object, requested_qt
                     'error_msg': f'Only {available_product_qty} QTY left form Product {requested_product_object.name}.'}
     else:
         return product_existence_status
+
+
+def validate_customer(fname, lname, phone, email, address):
+    fname = fname.strip()
+    lname = lname.strip()
+    phone = phone.strip()
+    email = email.strip()
+
+    phone_pattern = r"^\d{10}$"
+    phone_match = re.match(phone_pattern, phone)
+
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    email_match = re.match(email_pattern, email)
+
+    if fname == "" or lname == "":
+        return {'status': False, 'error_code': 'VAN_101', 'error_msg': 'First & Last name is Mandatory'}
+
+    elif phone != "":
+        if not phone_match:
+            return {'status': False, 'error_code': 'VAN_102', 'error_msg': 'Please enter a valid phone number'}
+
+    elif email != "":
+        if not email_match:
+            return {'status': False, 'error_code': 'VAN_103', 'error_msg': 'Please enter a valid Email number'}
+
+    return {'status': True}

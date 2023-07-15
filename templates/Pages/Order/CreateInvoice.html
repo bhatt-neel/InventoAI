@@ -97,25 +97,63 @@
                                 <td>{{product.sellingPrice}}</td>
                                 <td>
                                     <div class="row">
+
                                         <div class="col-auto">
                                             <form method="post">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-dark" name="decrease_product_qty" value="{{product.uuid}}">-</button>
+                                                <input type="hidden" name="request_type" value="decrease_product_qty">
+                                                <input type="hidden" name="requested_product" value="{{product.uuid}}">
+                                                <button type="submit" class="btn btn-sm btn-dark">
+                                                    <i class="fa-solid fa-minus"></i>
+                                                </button>
                                             </form>
                                         </div>
+
                                         <div class="col-auto">
                                             {{request.session.invoice|get_value_from_key:i}}
                                         </div>
+
                                         <div class="col-auto">
                                             <form method="post">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-dark" name="increase_product_qty" value="{{product.uuid}}">+</button>
+                                                <input type="hidden" name="request_type" value="increase_product_qty">
+                                                <input type="hidden" name="requested_product" value="{{product.uuid}}">
+                                                <button type="submit" class="btn btn-sm btn-dark">
+                                                    <i class="fa-solid fa-plus"></i>
+                                                </button>
                                             </form>
                                         </div>
+
                                     </div>
                                 </td>
                                 <td>{{request.session.invoice|get_value_from_key:i|multiply:product.sellingPrice}}</td>
-                                <td><a href="#" data-bs-toggle="modal" data-bs-target="#Model-{{forloop.counter}}" style="cursor:pointer">View</a></td>
+                                <td>
+
+
+
+                                    <form method="post">
+
+                                        {% csrf_token %}
+
+                                        <input type="hidden" name="request_type" value="delete_product">
+                                        <input type="hidden" name="requested_product" value="{{product.uuid}}">
+                                        <button type="submit" class="btn btn-sm btn-dark">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+
+                                        &nbsp;&nbsp;
+
+                                        <a href="#" class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#Model-{{forloop.counter}}">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+
+                                    </form>
+
+
+
+
+
+                                </td>
 
                                 <!-- Modal -->
                                 <div class="modal fade" id="Model-{{forloop.counter}}" tabindex="-1" aria-labelledby="Model-Label-{{forloop.counter}}" aria-hidden="true">
@@ -160,29 +198,134 @@
 
         <div class="col-lg-3 card mt-4">
 
-            <select class="form-control my-3">
-                <option>Select Customer</option>
-                {% for customer in customers %}
-                <option value="{{customer.uuid}}">{{customer.fname}} {{customer.lname}}</option>
-                {% endfor %}
-            </select>
+            <form method="post" id="toggle-form">
+                {% csrf_token %}
 
-            <hr>
+                <input type="hidden" name="request_type" id="form_type" value="select_customer">
 
-            <a href="#" class="text-center">Or Create</a>
+                <select class="form-control my-3" name="selected_customer" id="customer-selection">
+                    <option>Select Customer</option>
+                    {% for customer in customers %}
+                        <option value="{{customer.uuid}}">{{customer.fname}} {{customer.lname}}</option>
+                    {% endfor %}
+                </select>
 
-            <hr>
+                <hr>
 
-            <input type="text" class="form-control mt-3" placeholder="First name" disabled>
-            <input type="text" class="form-control mt-3" placeholder="Last name" disabled>
-            <input type="number" class="form-control mt-3" placeholder="Phone" disabled>
-            <input type="email" class="form-control mt-3" placeholder="Email" disabled>
-            <textarea class="form-control my-3" placeholder="Address" disabled></textarea>
-            <input type="submit" class="btn btn-dark mb-4" value="Generate Invoice">
+                <a class="text-center btn btn-sm btn-dark" id="toggleButtton" onclick="CustomerCreationHandler('create')">Or Create</a>
+
+                <hr>
+
+                <div class="customer-creation-form" id="customer-creation-form">
+                    <input type="text" class="form-control mt-3" name="fname" placeholder="First name" disabled>
+                    <input type="text" class="form-control mt-3" name="lname" placeholder="Last name" disabled>
+                    <input type="number" class="form-control mt-3" name="phone" placeholder="Phone" disabled>
+                    <input type="email" class="form-control mt-3" name="email" placeholder="Email" disabled>
+                    <textarea class="form-control my-3" name="address" placeholder="Address" disabled></textarea>
+                </div>
+
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-sm btn-dark mb-3" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                  Generate Invoice
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Confirm The Invoice</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                            <div class="card print-container p-3">
+
+                                <div class="">
+
+                                    <div class="header d-flex flex-row px-3 pt-3 pb-2 bor-bot b">
+
+                                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAe1BMVEUAAAD///+1tbXy8vKNjY1ubm5MTEyampppaWnx8fH4+Pjb29v19fUlJSVSUlLi4uK9vb3Kysqtra1+fn6ioqJ4eHjp6enDw8MyMjLQ0NBZWVk/Pz8WFhZHR0fU1NRzc3M6OjoLCwucnJxhYWGHh4ceHh4jIyMZGRkrKyuQiNwPAAAC+ElEQVR4nO3a6XqqMBCAYYOoIIiIuNZau9r7v8IjSz0oi4AkwPN872/NzMgkhMhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPTOe9sJyDYetxt/tpUdQJMcoJDjf3zKjjH8lR0hz1bf2ZrsCzgYzF3pITKt3KEwvxQE2omZgih3Pr25EGLhqIjliYWKMAnjiSUC/reScLoQeyWBIlt9EVYn5ktFEQ0hTEWhBueVa0bliY2S9gy8BM2iJJLhrePqxNQ/KwkZml4CnqRHcXxLXClrz1AQeCg3xOWOJxI2andPWhBT4s1wtnTtZHlT/yAvWJZVGFaXNLqhrcUNte0Z2EaBZaxq++TEa6U9Q/FP/NPwsC+3E6+d9gxpcfQmx/xZbqap8sR81WSM0vZ/P29jI47uJ1577RmyG61w78+zqmupPUPeNYmnh3qdHDOra609Q6f/aTz19Dv7ypp4Efe1qWzrSCzmRt0xDm+amVedsD+aTLc6I5GLV2uE6Ak2j9Vie0aSi55d+dvj3IkXt+eLhJSrGd0k9Fblq5cn2NyJF5pOunD2ettgpZ+AD8HRUTGr0s8ljXOXVqnTUqNw4sXt2erqmbC5z+zR44WT3kin2RMlyZeSzq4guayNdIaOtGdkmZHgLnN5OC83dsaH0zqweiZlXxPvdPupn7fsjXTasEPtGcnLdO3qxut2e3IM3duVu3YX1qjtelL2j7Mur2PtGZk0Vl732jOSulfU1MH2jD2+cZfRyfaMlV5D8nW1PWPFG+cSutuesSfr0zrcnrFnrqHZ7faM5Z88PHLsenvGip/P8yl4ZaIhfp3yTFn/38hQY9d2rH0e145HJxH3tFPbGVelVymvV+15VX417Vt7/hmXbc/erJ4pWecY99a9bM+rh1Nxo/I9KSlWReVZKt4XlO43b2tz1NW8T6eAs0jPPa0nO8+y3lfaPH4eNi1Xl/4qclsO3wrfowMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB66B90Khxsnli+aAAAAABJRU5ErkJggg==" class="logo mt--2 rounded" width="60" height="60">
+
+                                        <div class="d-flex flex-column font-weight-bold text-default px-3">
+
+                                            SIDDHA YODA MEDITATION CENTER
+
+                                            <small>Bill: &nbsp;&nbsp;&nbsp; Date : </small>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="p-3 bx">
+                                        <table class="w-100">
+                                                <tr>
+                                                    <td><b>Center Address</b></td>
+<!--                                                    <td><b>Customer Address</b></td>-->
+                                                </tr>
+
+                                                <tr>
+                                                    <td colspan="2" class="pt-2">Host : <br> SIDDHA YODA MEDITATION CENTER<br> 1, Ratndip Society,  Nava Naroda - <br> 382330, Ahmedabad</td>
+<!--                                                    <td class="c_address wrap-content">Name : Neel Bhatt<br>Address : Neel Tenament Part 2, Nava Naroda Ahmedabad, 382330</td>-->
+                                                </tr>
+
+                                        </table>
+                                    </div>
 
 
+                                    <div class="table-responsive">
+                                        <table class="bbody w-100 only-rig table-bordered" border=1>
+                                                <tr class="thead font-weight-bold" height="70">
+                                                    <td class="text-center">ID</td>
+                                                    <td class="text-center">Name</td>
+                                                    <td class="text-center">QTY</td>
+                                                    <td class="text-center">MRP</td>
+                                                    <td class="text-center">Rate</td>
+                                                    <td class="text-center">Total</td>
+                                                </tr>
+
+                                            {% for i in request.session.invoice %}
+                                                {% with i|get_product_by_uuid as product %}
+                                                    <tr class="bb-none" height="45">
+                                                        <td class="text-center">{{forloop.counter}}</td>
+                                                        <td class="w-50 pl-3"><span class="">{{product.name}}</span></td>
+                                                        <td class="text-center">{{request.session.invoice|get_value_from_key:i}}</td>
+                                                        <td class="text-center">{{product.mrp}}</td>
+                                                        <td class="text-center">{{product.sellingPrice}}</td>
+                                                        <td class="text-center">{{request.session.invoice|get_value_from_key:i|multiply:product.sellingPrice}}</td>
+                                                    </tr>
+                                                {% endwith %}
+                                            {% endfor %}
 
 
+                                                <tr class="bt bb" height=50>
+                                                    <td colspan="4" class="header text-center">
+                                                        You Got Total <span class="font-weight-bold">10 %</span> Discount
+                                                    </td>
+                                                    <td class="text-center header font-weight-bold" colspan="2"></td>
+                                                </tr>
+
+                                                <tr class="" height="70s">
+                                                    <td colspan="4" class="b-none"></td>
+                                                    <td colspan="2" class="header b-none text-center">Host - <span class="font-weight-bold">{{request.user}}</span></td>
+                                                </tr>
+
+                                        </table>
+                                    </div>
+
+
+                                </div>
+
+                            </div>
+                      </div>
+                      <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <input type="submit" class="btn btn-dark" value="Confirm">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+            </form>
         </div>
 
     </div>
@@ -190,6 +333,92 @@
 
 
 </div>
+
+<script>
+    function CustomerCreationHandler(parm) {
+        var selectionBox = document.getElementsByName("selected_customer")[0];
+        var fname = document.getElementsByName("fname")[0];
+        var lname = document.getElementsByName("lname")[0];
+        var phone = document.getElementsByName("phone")[0];
+        var email = document.getElementsByName("email")[0];
+        var address = document.getElementsByName("address")[0];
+
+        var form = document.getElementById("toggle-form");
+        var toggleButton = document.getElementById("toggleButtton");
+        var form_type = document.getElementById("form_type");
+
+        if(parm == 'create'){
+            selectionBox.disabled = true;
+            fname.disabled = false;
+            lname.disabled = false;
+            phone.disabled = false;
+            email.disabled = false;
+            address.disabled = false;
+
+            fname.value = "";
+            lname.value = "";
+            phone.value = "";
+            email.value = "";
+            address.value = "";
+
+            form_type.value = 'create_customer';
+            
+            toggleButton.setAttribute('onclick','CustomerCreationHandler("select")');
+            toggleButton.innerHTML = 'Back to Selection';
+            
+            console.log(parm)
+        }
+
+        else if(parm == 'select'){
+
+            selectionBox.disabled = false;
+            fname.disabled = true;
+            lname.disabled = true;
+            phone.disabled = true;
+            email.disabled = true;
+            address.disabled = true;
+
+            form_type.value = 'select_customer';
+
+            toggleButton.setAttribute('onclick','CustomerCreationHandler("create")');
+            toggleButton.innerHTML = 'Or Create';
+        }
+
+    }
+
+    CustomerCreationHandler()
+
+    
+    function display_data(){
+        var fname = document.getElementsByName("fname")[0];
+        var lname = document.getElementsByName("lname")[0];
+        var phone = document.getElementsByName("phone")[0];
+        var email = document.getElementsByName("email")[0];
+        var address = document.getElementsByName("address")[0];
+        
+        var selectCustomer = document.getElementsByName("selected_customer")[0];
+        var customerUUID = selectCustomer.value;
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.open('GET', '/order/get_customer?uuid=' + customerUUID, true);
+        xhr.responseType = 'json';
+        xhr.onload = function() {
+        if (xhr.status === 200) {
+            var responseData = xhr.response;
+            fname.value = responseData.fname;
+            lname.value = responseData.lname;
+            phone.value = responseData.phone;
+            email.value = responseData.email;
+            address.value = responseData.address;
+        }
+        };
+        xhr.send();
+    }
+
+    var selectCustomer = document.getElementsByName("selected_customer")[0];
+    selectCustomer.addEventListener("change", display_data);
+</script>
 
 <script>
   function autocomplete(inp, arr) {
